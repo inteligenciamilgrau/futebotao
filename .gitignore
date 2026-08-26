@@ -51,10 +51,14 @@ sons/
 # `tests/*.png` está ignorado.
 !docs/*.webp
 
-# A música de fundo é do jogador, não do projeto: o arquivo pode ter dono e
-# tem megabytes. Só a instrução de onde colocá-la é versionada.
-public/audio/*
-!public/audio/LEIA-ME.txt
+# A música de fundo VAI junto: ela foi feita para o jogo, não é faixa de
+# terceiro, e sem ela o botão "Música" de um clone novo não toca nada.
+#
+# É o único arquivo pesado do repositório (3,6 MB contra 1,1 MB de todo o
+# resto), e mp3 não comprime no git: cada versão nova entra inteira. Se um dia
+# a trilha crescer, o lugar dela é uma release, não o histórico.
+!public/audio/
+!public/audio/*.mp3
 
 # Python
 __pycache__/

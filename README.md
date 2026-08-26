@@ -135,7 +135,7 @@ public/
   js/net.js       REST + broker
   css/style.css   a interface inteira
   img/            o pôster de abertura e o escudo, em webp (a única arte de arquivo)
-  audio/          onde você põe a sua música de fundo (fora do git)
+  audio/          a trilha de fundo, feita para o jogo
 bot/
   client.js       biblioteca de cliente para bots
   heuristic-bot.js bot geométrico, sem LLM
@@ -312,11 +312,12 @@ desenhado — e grava um `.wav` para quem quiser ouvir de verdade.
 
 ### Música de fundo
 
-Opcional e sua: ponha um arquivo em `public/audio/maracana.mp3` e o botão **Música** o toca
-em laço, com régua de volume ao lado. Ela não passa pelo volume da torcida — são dois
-controles, para quem quer baixar a música e continuar ouvindo o apito — e abaixa sozinha por
-seis segundos no gol. O diretório está no `.gitignore`: a música não vai para o repositório.
-Detalhes em `public/audio/LEIA-ME.txt`.
+A trilha (`public/audio/maracana.mp3`) foi feita para o jogo e vem junto no repositório —
+é o único arquivo pesado dele. O botão **Música** a toca em laço, com régua de volume ao lado.
+Ela não passa pelo volume da torcida: são dois controles, porque quem baixa a música
+costuma querer continuar ouvindo o apito. No gol ela abaixa sozinha por seis segundos e
+volta — música alta por cima do rugido vira barulho. Para trocar a faixa, é só substituir o
+arquivo; outros formatos servem (ver `public/audio/LEIA-ME.txt`).
 
 ## Replay
 

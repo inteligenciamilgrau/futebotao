@@ -20,4 +20,5 @@ Detalhes que importam:
 - Outros formatos servem: .ogg, .m4a e .wav também são reconhecidos pelo
   servidor. Para usar um deles, troque o caminho em `musica()`, em
   public/js/torcida-som.js.
-- Este diretório está no .gitignore: sua música não vai para o repositório.
+- maracana.mp3 foi feita para o jogo e vem versionada. Se você trocar a faixa por uma
+  de terceiro, tire-a do git antes de publicar o repositório.
