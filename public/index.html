@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Futebotão</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚽</text></svg>">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- Avisos de como ESTE servidor está configurado. O conteúdo vem de
+     GET /api/seguranca; some quando não há nada a dizer. -->
+<div id="avisoSeguranca" class="aviso-seguranca" style="display:none"></div>
+
+<div id="aviso" class="aviso"></div>
+
+<!-- ---------------- LOGIN ---------------- -->
+<section class="tela ativa" data-tela="auth">
+  <div class="cartao-auth">
+    <!-- A marca é imagem, e o <h1> continua existindo por baixo dela: leitor de
+         tela e aba do navegador precisam do texto, e se o PNG não carregar a
+         tela não fica sem título. -->
+    <h1 class="marca"><img src="/img/logo.webp" alt="Futebotão"></h1>
+    <p class="sub">Mesa 3D, palheta por coordenadas, turnos e API para bots.</p>
+    <form id="formAuth">
+      <label>Seu nome
+        <input id="authNome" autocomplete="username" placeholder="ex: joao" required>
+      </label>
+      <label>Senha
+        <input id="authSenha" type="password" autocomplete="current-password" placeholder="mínimo 4 caracteres" required>
+      </label>
+      <div class="linha-botoes">
+        <button type="button" id="btnEntrar">Entrar</button>
+        <button type="button" id="btnRegistrar" class="secundario">Criar jogador</button>
+      </div>
+    </form>
+    <p class="rodape-auth">Bots usam as mesmas rotas: <code>POST /api/auth/register</code></p>
+  </div>
+</section>
+
+<!-- ---------------- LOBBY ---------------- -->
+<section class="tela" data-tela="lobby">
+  <header class="topo">
+    <h1>⚽ Futebotão</h1>
+    <div class="topo-dir">
+      <span id="quemSou" class="quem"></span>
+      <span id="statusConexao" class="off" title="conexão com o broker"></span>
+      <button id="btnSair" class="secundario pequeno">Sair</button>
+    </div>
+  </header>
+
+  <div class="lobby">
+    <div class="coluna-lista">
+      <div class="cabecalho-lista">
+        <h2>Partidas</h2>
+        <button id="btnAtualizarLobby" class="secundario pequeno">Atualizar</button>
+      </div>
+      <div id="listaPartidas"></div>
+    </div>
+
+    <aside class="coluna-nova">
+      <h2>Nova partida</h2>
+      <form id="formNovaPartida">
+        <label>Nome <input id="novoNome" value="Pelada" maxlength="40"></label>
+        <div class="par">
+          <label>Time A <input id="novoTimeA" value="Azuis" maxlength="20"></label>
+          <label>Time B <input id="novoTimeB" value="Vermelhos" maxlength="20"></label>
+        </div>
+        <div class="par">
+          <label>Jogadores A <input id="novoSlotsA" type="number" min="1" max="6" value="1"></label>
+          <label>Jogadores B <input id="novoSlotsB" type="number" min="1" max="6" value="1"></label>
+        </div>
+        <p class="dica">Dá para montar 2 contra 1, 3 contra 3, o que quiser. Dentro do time, a vez roda entre os jogadores.</p>
+
+        <label>Você entra como
+          <select id="novoComoEntrar">
+            <option value="A" selected>Jogador do time A</option>
+            <option value="B">Jogador do time B</option>
+            <option value="assistir">Só assistir (não jogo)</option>
+          </select>
+        </label>
+        <p class="dica" id="dicaAssistir" style="display:none">Você fica de fora da mesa. Depois é só preencher os dois times com IA e ver a partida acontecer.</p>
+        <label>Botões por time <input id="novoBotoes" type="number" min="1" max="11" value="5"></label>
+
+        <fieldset class="grupo">
+          <legend>Duração da partida</legend>
+          <label class="check"><input type="checkbox" id="novoSemFim" checked> sem limite (só acaba quando alguém sair)</label>
+          <label class="sub-campo">Acaba depois de <input id="novoTurnos" type="number" min="4" max="2000" value="120" disabled> jogadas</label>
+        </fieldset>
+
+        <fieldset class="grupo">
+          <legend>Tempo por jogada</legend>
+          <label class="check"><input type="checkbox" id="novoSemRelogio" checked> sem limite (ninguém perde a vez por demorar)</label>
+          <label class="sub-campo">Prazo de <input id="novoTempo" type="number" min="5" max="3600" value="120" disabled> segundos</label>
+        </fieldset>
+
+        <fieldset class="grupo">
+          <legend>Quando a vez passa</legend>
+          <p class="regras-resumo">
+            Você joga <b>até errar</b>. A vez só passa quando:<br>
+            · o botão encostar num <b>adversário antes da bola</b> (falta)<br>
+            · o botão <b>não encostar na bola</b><br>
+            · a bola <b>sair de campo</b><br>
+            · a bola parar tendo <b>tocado por último num adversário</b>
+          </p>
+          <label class="check"><input type="checkbox" id="novoLimiteToques"> limitar também a <input id="novoToques" type="number" min="1" max="10" value="3" disabled> toques por posse</label>
+        </fieldset>
+
+        <button type="submit">Criar e entrar</button>
+      </form>
+    </aside>
+  </div>
+</section>
+
+<!-- ---------------- JOGO ---------------- -->
+<section class="tela" data-tela="jogo">
+  <div class="hud">
+    <div class="hud-esq">
+      <button id="btnVoltarLobby" class="secundario pequeno">&larr; Lobby</button>
+      <div class="identidade">
+        <strong id="tituloPartida">Partida</strong>
+        <span id="seuPapel" class="papel"></span>
+      </div>
+    </div>
+    <div class="placar">
+      <span class="time-a" id="nomeTimeA">Time A</span>
+      <b id="placarA">0</b>
+      <span class="tracinho">–</span>
+      <b id="placarB">0</b>
+      <span class="time-b" id="nomeTimeB">Time B</span>
+    </div>
+    <div class="hud-info">
+      <span id="infoTurno"></span>
+      <span id="infoRelogio"></span>
+      <span id="cronometro"></span>
+    </div>
+  </div>
+
+  <div class="area-jogo">
+    <canvas id="tela3d"></canvas>
+    <div id="comemoracao" class="comemoracao"></div>
+    <div id="selo" class="selo-replay"><span class="ponto"></span>REPLAY</div>
+
+    <div id="faixaPalheta" class="faixa-palheta">
+      <span class="fp-rotulo">palheta com</span>
+      <strong id="fpNome">—</strong>
+      <span id="fpDetalhe" class="fp-detalhe"></span>
+    </div>
+
+    <div class="camera-barra">
+      <button id="btnSom" class="pequeno" title="Som da torcida">🔇 Torcida</button>
+      <button id="btnMusica" class="pequeno" title="Música de fundo (public/audio/maracana.mp3)">🔇 Música</button>
+      <input id="volMusica" class="vol" type="range" min="0" max="100" value="35"
+             title="Volume da música" aria-label="Volume da música">
+      <button data-camera="jogador" class="pequeno">Jogador</button>
+      <button data-camera="tresQuartos" class="pequeno">3/4</button>
+      <button data-camera="alto" class="pequeno">Alto</button>
+      <button data-camera="lateral" class="pequeno">Lateral</button>
+      <button data-camera="rasante" class="pequeno">Rasante</button>
+      <button data-camera="timeA" class="pequeno">Gol A</button>
+      <button data-camera="timeB" class="pequeno">Gol B</button>
+      <span class="dica-mouse">esquerdo arrasta · direito gira · roda dá zoom</span>
+    </div>
+
+    <aside class="painel">
+      <!-- ------- palheta ------- -->
+      <div id="painelJogada" class="bloco">
+        <div class="bloco-topo">
+          <h3>Palheta</h3>
+          <span id="estadoVez" class="etiqueta-vez">—</span>
+        </div>
+        <p class="mini" id="seuTime"></p>
+
+        <div class="escolha-botao">
+          <span class="eb-rotulo">Botão escolhido</span>
+          <strong id="botaoSelecionado">—</strong>
+        </div>
+        <div id="listaBotoes" class="chips"></div>
+        <p id="dicaEscolha" class="dica-escolha">Escolha um botão: clique num chip aí em cima, ou num disco destacado na mesa.</p>
+
+        <div class="controle">
+          <label for="ctlAngulo">Ângulo no aro
+            <em id="ctlAnguloVal">180°</em>
+          </label>
+          <div class="linha-ctl">
+            <input type="range" id="ctlAngulo" min="0" max="359" step="1" value="180">
+            <input type="number" id="ctlAnguloNum" min="0" max="359" step="1" value="180">
+          </div>
+          <p class="explica">onde a palheta encosta · o botão sai para <b id="saidaDir">0°</b></p>
+        </div>
+
+        <div class="controle">
+          <label for="ctlInclinacao">Inclinação
+            <em id="ctlInclinacaoVal">45°</em>
+          </label>
+          <div class="linha-ctl">
+            <input type="range" id="ctlInclinacao" min="10" max="80" step="1" value="45">
+            <input type="number" id="ctlInclinacaoNum" min="10" max="80" step="1" value="45">
+          </div>
+          <p class="explica">deitada escorrega · em pé faz cavadinha · 45° rende mais</p>
+        </div>
+
+        <div class="controle">
+          <label for="ctlAvanco">Avanço (borda → centro)
+            <em id="ctlAvancoVal">0.35</em>
+          </label>
+          <div class="linha-ctl">
+            <input type="range" id="ctlAvanco" min="0" max="1" step="0.01" value="0.35">
+            <input type="number" id="ctlAvancoNum" min="0" max="1" step="0.01" value="0.35">
+          </div>
+          <p class="explica">na quina ela escorrega · no centro prende o botão</p>
+        </div>
+
+        <div class="controle">
+          <label for="ctlForca">Força
+            <em id="ctlForcaVal">0.60</em>
+          </label>
+          <div class="linha-ctl">
+            <input type="range" id="ctlForca" min="0.05" max="1" step="0.01" value="0.6">
+            <input type="number" id="ctlForcaNum" min="0.05" max="1" step="0.01" value="0.6">
+          </div>
+        </div>
+
+        <div class="atalhos">
+          <button id="btnMirarBola" class="secundario pequeno">Apontar na bola</button>
+          <button id="btnOtimo" class="secundario pequeno">Apoio ótimo</button>
+        </div>
+
+        <div id="diagnostico" class="diagnostico"></div>
+
+        <button id="btnDeclarar" class="secundario" style="display:none">Declarar chute a gol</button>
+        <p id="avisoDeclarado" class="aviso-declarado" style="display:none">
+          Chute declarado — este gol vale. Sem declarar, o gol é anulado.
+        </p>
+        <button id="btnChutar" disabled>Apertar a palheta</button>
+
+        <p class="ajuda atalhos">
+          <b>Teclado</b> — com o foco fora dos campos:<br>
+          <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>… escolhem o botão (<kbd>0</kbd> é o 10º)<br>
+          <kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> viram a mira ·
+          <kbd>↑</kbd><kbd>↓</kbd> ou <kbd>W</kbd><kbd>S</kbd> inclinação<br>
+          <kbd>Shift</kbd>+as mesmas → avanço e força<br>
+          <kbd>Q</kbd><kbd>E</kbd> avanço · <kbd>F</kbd><kbd>R</kbd> força (sem modificador)<br>
+          Segure a tecla para andar mais rápido · <kbd>Espaço</kbd> aperta a palheta
+        </p>
+        <p class="ajuda">
+          <b>Mouse</b> — clique num disco destacado para escolher.<br>
+          Esquerdo arrasta a mesa · direito gira · roda dá zoom.
+        </p>
+        <button id="btnChamarIA" class="secundario" style="display:none">Jogar contra a IA fixa</button>
+        <!-- Um botão por time: dá para esperar uma LLM no azul, no vermelho, ou nos dois. -->
+        <div id="esperaLLM" class="espera-llm"></div>
+        <button id="btnIAvsIA" class="secundario" style="display:none">Preencher a mesa com IA e assistir</button>
+
+        <!-- Um bloco de convite por vaga guardada. -->
+        <div id="painelConvite"></div>
+        <button id="btnIniciar" style="display:none">Começar a partida</button>
+        <button id="btnEncerrar" class="secundario pequeno perigo" style="display:none">Encerrar a partida</button>
+        <button id="btnSairPartida" class="secundario pequeno" style="display:none">Sair da partida</button>
+      </div>
+
+      <!-- Depuração: o que o servidor publica a cada jogada. Fechada por
+           padrão, porque é ferramenta de quem está mexendo no jogo. -->
+      <details id="abaTopicos" class="bloco topicos">
+        <summary>Tópicos <span id="tpConta" class="tp-conta">0</span></summary>
+        <div class="tp-controles">
+          <label class="check"><input type="checkbox" id="tpPausa"> pausar</label>
+          <label class="check"><input type="checkbox" id="tpRuido"> incluir state/aim</label>
+          <button id="tpLimpar" class="pequeno secundario">limpar</button>
+        </div>
+        <div id="tpLista" class="tp-lista"></div>
+      </details>
+
+      <!-- ------- cobrança ------- -->
+      <div id="painelCobranca" class="bloco" style="display:none">
+        <div class="bloco-topo">
+          <h3 id="cbTitulo">Cobrança</h3>
+          <span id="cbPrazo" class="etiqueta-vez destaque"></span>
+        </div>
+        <p class="mini" id="cbAviso">A bola saiu. Escolha um botão e ponha onde quiser perto da bola.</p>
+
+        <div class="escolha-botao">
+          <span class="eb-rotulo">Botão da cobrança</span>
+          <strong id="cbBotao">—</strong>
+        </div>
+        <div id="cbLista" class="chips"></div>
+
+        <div class="controle">
+          <label for="cbX">Posição X <em id="cbXVal">—</em></label>
+          <div class="linha-ctl">
+            <input type="range" id="cbX" min="0" max="200" step="0.5">
+            <input type="number" id="cbXNum" step="0.5">
+          </div>
+        </div>
+        <div class="controle">
+          <label for="cbY">Posição Y <em id="cbYVal">—</em></label>
+          <div class="linha-ctl">
+            <input type="range" id="cbY" min="0" max="120" step="0.5">
+            <input type="number" id="cbYNum" step="0.5">
+          </div>
+        </div>
+
+        <p class="mini" id="cbInfo"></p>
+        <button id="btnConfirmarCobranca" disabled>Pronto, vou cobrar</button>
+      </div>
+
+      <!-- ------- goleiro ------- -->
+      <div id="painelGoleiro" class="bloco" style="display:none">
+        <div class="bloco-topo">
+          <h3>Posicionar o goleiro</h3>
+          <span id="gkPrazo" class="etiqueta-vez destaque"></span>
+        </div>
+        <p class="mini" id="gkAviso">O adversário declarou chute a gol. Ponha a caixa onde quiser, dentro da sua área.</p>
+
+        <div class="controle">
+          <label for="gkX">Posição X <em id="gkXVal">—</em></label>
+          <div class="linha-ctl">
+            <input type="range" id="gkX" min="0" max="200" step="0.5">
+            <input type="number" id="gkXNum" step="0.5">
+          </div>
+        </div>
+        <div class="controle">
+          <label for="gkY">Posição Y <em id="gkYVal">—</em></label>
+          <div class="linha-ctl">
+            <input type="range" id="gkY" min="0" max="120" step="0.5">
+            <input type="number" id="gkYNum" step="0.5">
+          </div>
+        </div>
+        <div class="controle">
+          <label for="gkAng">Ângulo da caixa <em id="gkAngVal">90°</em></label>
+          <div class="linha-ctl">
+            <input type="range" id="gkAng" min="0" max="179" step="1" value="90">
+            <input type="number" id="gkAngNum" min="0" max="179" step="1" value="90">
+          </div>
+          <p class="explica">90° = atravessada na frente do gol · 0° = de lado, quase invisível</p>
+        </div>
+
+        <p class="mini" id="gkArea"></p>
+        <button id="btnConfirmarGoleiro">Pronto, posicionei</button>
+      </div>
+
+      <!-- ------- replay ------- -->
+      <div id="painelReplay" class="bloco" style="display:none">
+        <div class="bloco-topo">
+          <h3>Replay</h3>
+          <button id="btnFecharReplay" class="secundario pequeno">Voltar ao jogo</button>
+        </div>
+        <div class="replay-controles">
+          <button id="rpPrimeiro" class="pequeno secundario" title="primeiro lance da partida">⏪</button>
+          <button id="rpLanceAnt" class="pequeno secundario" title="lance anterior">⏮</button>
+          <button id="rpQuadroAnt" class="pequeno secundario" title="passo anterior">◀</button>
+          <button id="rpPlay" class="pequeno" title="tocar">▶</button>
+          <button id="rpQuadroProx" class="pequeno secundario" title="próximo passo">▶|</button>
+          <button id="rpLanceProx" class="pequeno secundario" title="próximo lance">⏭</button>
+          <button id="rpUltimo" class="pequeno secundario" title="último lance da partida">⏩</button>
+          <select id="rpVelocidade" class="pequeno-select">
+            <option value="0.25">0,25x</option>
+            <option value="0.5">0,5x</option>
+            <option value="1" selected>1x</option>
+            <option value="2">2x</option>
+            <option value="4">4x</option>
+          </select>
+        </div>
+        <p id="rpDescricao" class="rp-descricao">—</p>
+        <div id="rpFase" class="rp-fase"></div>
+        <label class="rp-scrub">passo
+          <input type="range" id="rpQuadro" min="0" max="0" value="0">
+          <em id="rpQuadroVal">0/0</em>
+        </label>
+        <div id="rpLista" class="rp-lista"></div>
+      </div>
+
+      <div class="bloco">
+        <div class="bloco-topo">
+          <h3>Jogadores</h3>
+          <button id="btnAbrirReplay" class="secundario pequeno">Ver replay</button>
+        </div>
+        <div id="listaJogadores"></div>
+      </div>
+
+      <div class="bloco cresce">
+        <h3>Narração</h3>
+        <div id="registro"></div>
+        <form id="formChat">
+          <input id="chatTexto" placeholder="falar com a mesa..." maxlength="200">
+        </form>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+# Dependências
+node_modules/
+
+# Dados do servidor.
+#
+# `data/players.json` guarda os jogadores com HASH DE SENHA. Nada aqui vai para
+# o repositório — nem os backups, que foi por onde 641 hashes quase escaparam.
+# O servidor cria a pasta sozinho no primeiro start.
+data/
+
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Imagens geradas para inspeção.
+#
+# `scripts/foto.py` despeja PNGs aqui a cada execução, e comparar "antes" com
+# "depois" gera dezenas por rodada. São descartáveis por natureza: quem quiser
+# ver, roda o script. Cinco delas chegaram a ser commitadas por descuido.
+fotos/
+tests/*.png
+
+# Sons gerados para inspeção, pelo mesmo motivo das fotos.
+#
+# `scripts/ouvir.py` grava um .wav por som medido, e comparar "antes" com
+# "depois" enche a pasta. São descartáveis: quem quiser ouvir, roda o script.
+# Uma rodada de agentes deixou 30 arquivos aqui de uma vez.
+sons/
+*.wav
+
+# Nenhum PNG entra por acidente. Gramado, rede, números e faixas são todos
+# desenhados em canvas no cliente; todo .png solto por aqui é resultado de
+# teste ou de inspeção.
+*.png
+
+# A exceção prevista acima: `public/img/` é arte de verdade, versionada de
+# propósito — o jogo tem que funcionar recém-clonado, sem rodar script nenhum.
+#
+# Só o WEBP entra, e só o da raiz. Os PNG originais ficam em `public/img/ia/`
+# como fonte, fora do repositório: são 4 MB contra 200 KB dos webp que o jogo
+# realmente carrega. Quem precisar do original pede a quem gerou.
+!public/img/
+!public/img/*.webp
+
+# E a imagem de exemplo do README — o frame que a IA enxerga.
+#
+# Ela NÃO pode ser `tests/frame.png`: aquele arquivo é reescrito a cada
+# `npm test`, e apontar o README para ele deixava o repositório sujo toda
+# rodada — além de o README exibir imagem quebrada no GitHub, porque
+# `tests/*.png` está ignorado.
+!docs/*.webp
+
+# A música de fundo é do jogador, não do projeto: o arquivo pode ter dono e
+# tem megabytes. Só a instrução de onde colocá-la é versionada.
+public/audio/*
+!public/audio/LEIA-ME.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs e temporários
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp

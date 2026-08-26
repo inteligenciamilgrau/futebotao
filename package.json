@@ -1,0 +1,22 @@
+{
+  "name": "futebotao",
+  "version": "1.0.0",
+  "description": "Futebotão — futebol de botão 3D com API, turnos, broker estilo MQTT e bots de IA",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node scripts/testar.mjs",
+    "demo": "node bot/demo-match.js",
+    "bot:heuristic": "node bot/heuristic-bot.js",
+    "bot:ia": "node bot/ai-bot.js",
+    "calibration": "node tests/calibration.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.71.2"
+  }
+}

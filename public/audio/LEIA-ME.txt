@@ -1,0 +1,23 @@
+Música de fundo do Futebotão
+============================
+
+Ponha o arquivo AQUI, com este nome exato:
+
+    public/audio/maracana.mp3
+
+O botão "Música" na barra de câmera, dentro da partida, toca essa faixa em
+laço. Ao lado dele fica a régua de volume. As duas coisas ficam guardadas nas
+preferências, então voltam do jeito que você deixou.
+
+Detalhes que importam:
+
+- A faixa NÃO passa pelo volume da torcida: são dois controles separados, para
+  quem quer baixar a música e continuar ouvindo o apito.
+- No gol a música abaixa sozinha por uns seis segundos e volta. É de propósito
+  — música alta por cima do rugido da torcida vira barulho.
+- O navegador não deixa áudio começar sozinho. Por isso a música só arranca
+  quando você clica no botão, mesmo que a preferência esteja ligada.
+- Outros formatos servem: .ogg, .m4a e .wav também são reconhecidos pelo
+  servidor. Para usar um deles, troque o caminho em `musica()`, em
+  public/js/torcida-som.js.
+- Este diretório está no .gitignore: sua música não vai para o repositório.

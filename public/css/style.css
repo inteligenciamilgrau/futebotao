@@ -1,0 +1,554 @@
+:root {
+  --bg: #0d1117;
+  --bg2: #151b24;
+  --bg3: #1c2430;
+  --linha: #2a3542;
+  --txt: #e6edf5;
+  --txt2: #96a3b4;
+  --a: #3a7af0;
+  --b: #e6483c;
+  --ok: #46c98b;
+  --alerta: #f0a93a;
+  --destaque: #ffd24a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; height: 100%;
+  background: var(--bg);
+  color: var(--txt);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+button {
+  font: inherit; font-weight: 600;
+  color: #0b1018;
+  background: var(--destaque);
+  border: 0; border-radius: 7px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: filter .15s, opacity .15s;
+}
+button:hover:not(:disabled) { filter: brightness(1.12); }
+button:disabled { opacity: .38; cursor: not-allowed; }
+button.secundario { background: var(--bg3); color: var(--txt); border: 1px solid var(--linha); }
+button.pequeno { padding: 5px 10px; font-size: 12px; }
+
+input {
+  font: inherit;
+  background: var(--bg);
+  color: var(--txt);
+  border: 1px solid var(--linha);
+  border-radius: 7px;
+  padding: 8px 10px;
+  width: 100%;
+}
+input:focus { outline: 2px solid var(--a); outline-offset: -1px; }
+label { display: block; font-size: 12px; color: var(--txt2); margin-bottom: 10px; }
+label input { margin-top: 4px; }
+
+.tela { display: none; height: 100%; }
+.tela.ativa { display: flex; flex-direction: column; }
+
+/* ---------------- avisos ---------------- */
+.aviso {
+  position: fixed; top: 14px; left: 50%; transform: translate(-50%, -140%);
+  background: var(--bg3); border: 1px solid var(--linha); border-radius: 9px;
+  padding: 10px 18px; z-index: 100; transition: transform .25s; max-width: 80vw;
+}
+.aviso.visivel { transform: translate(-50%, 0); }
+.aviso.erro { border-color: var(--b); color: #ffb3ac; }
+
+/* ---------------- auth ---------------- */
+
+/* O pôster de abertura vive aqui. `cover` e não `contain`: a imagem foi
+   pintada com vinheta escura nas quatro beiradas justamente para o corte
+   acontecer onde não há nada, e o formulário ler por cima. A cor de fundo
+   embaixo dela é o que aparece enquanto o PNG não chega — sem ela, a tela
+   pisca branco. */
+/* WebP, e só WebP: 92 KB contra 663 KB do PNG que o gerador cospe. O PNG é
+   artefato intermediário e não vai para o repositório — quem quiser refazer
+   roda `node scripts/abertura.mjs` e converte.
+
+   `cover` e não `contain`: o pôster foi pintado com vinheta escura nas quatro
+   beiradas justamente para o corte acontecer onde não há nada, e o formulário
+   ler por cima. A cor de fundo embaixo dele é o que aparece enquanto a imagem
+   não chega — sem ela a tela pisca. */
+[data-tela=auth] {
+  align-items: center; justify-content: center;
+  background: var(--bg) url('/img/abertura.webp') center/cover no-repeat;
+  position: relative;
+}
+/* Um véu por cima do pôster: sem ele o contraste do formulário depende do
+   pedaço da imagem que calhou de ficar atrás dele. */
+[data-tela=auth]::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(8,11,17,.42) 0%, rgba(8,11,17,.82) 78%);
+}
+.cartao-auth {
+  position: relative;
+  background: rgba(19, 25, 34, .88);
+  backdrop-filter: blur(7px);
+  border: 1px solid var(--linha); border-radius: 14px;
+  padding: 32px; width: min(400px, 92vw);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+}
+.cartao-auth h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: -.5px; }
+/* A marca substitui o texto do h1 sem apagá-lo: a imagem entra dentro dele e o
+   `alt` continua sendo o título da tela para leitor de tela e para o caso de o
+   arquivo não carregar.
+   O escudo é quadrado, então quem manda no tamanho é a ALTURA — com largura
+   100% ele ocupava metade do cartão sozinho. */
+.marca { margin: 0 0 4px !important; line-height: 0; text-align: center; }
+.marca img { width: auto; height: 168px; max-width: 100%; display: inline-block; }
+.sub { color: var(--txt2); margin: 0 0 22px; }
+.linha-botoes { display: flex; gap: 10px; }
+.linha-botoes button { flex: 1; }
+.rodape-auth { color: var(--txt2); font-size: 12px; margin: 18px 0 0; }
+code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+/* ---------------- topo ---------------- */
+.topo {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--linha); background: var(--bg2);
+}
+.topo h1 { margin: 0; font-size: 18px; }
+.topo-dir { display: flex; align-items: center; gap: 12px; }
+.quem { color: var(--txt2); font-size: 12px; font-family: ui-monospace, monospace; }
+#statusConexao { width: 9px; height: 9px; border-radius: 50%; background: var(--b); }
+#statusConexao.on { background: var(--ok); }
+
+/* ---------------- lobby ---------------- */
+.lobby { flex: 1; display: grid; grid-template-columns: 1fr 340px; gap: 20px; padding: 20px; overflow: auto; }
+.cabecalho-lista { display: flex; justify-content: space-between; align-items: center; }
+.lobby h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .07em; color: var(--txt2); }
+.coluna-nova { background: var(--bg2); border: 1px solid var(--linha); border-radius: 12px; padding: 18px; height: fit-content; }
+.par { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dica { font-size: 12px; color: var(--txt2); margin: 2px 0 12px; }
+.coluna-nova button[type=submit] { width: 100%; margin-top: 6px; }
+
+.cartao-partida { background: var(--bg2); border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.cp-topo { display: flex; justify-content: space-between; align-items: center; }
+.tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--bg3); color: var(--txt2); }
+.tag-running { background: #14361f; color: var(--ok); }
+.tag-finished { background: #341717; color: #ff9b92; }
+.cp-placar { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 16px; }
+.cp-info { font-size: 12px; color: var(--txt2); }
+.cp-acoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.cp-acoes button { font-size: 12px; padding: 6px 11px; }
+.vazio { color: var(--txt2); }
+.time-a { color: var(--a); font-weight: 600; }
+.time-b { color: var(--b); font-weight: 600; }
+
+/* ---------------- jogo ---------------- */
+.hud {
+  position: relative; z-index: 5;          /* fica acima dos balões da mesa */
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center; gap: 16px;
+  padding: 10px 18px; background: var(--bg2); border-bottom: 2px solid var(--linha);
+}
+.hud.posse-a { border-bottom-color: var(--a); }
+.hud.posse-b { border-bottom-color: var(--b); }
+.placar { display: flex; align-items: center; gap: 12px; justify-content: center; font-size: 19px; white-space: nowrap; }
+.placar b { font-size: 26px; font-variant-numeric: tabular-nums; }
+.tracinho { color: var(--txt2); }
+.hud-info {
+  display: flex; gap: 14px; align-items: center; justify-content: flex-end;
+  flex-wrap: wrap; font-size: 12px; color: var(--txt2); min-width: 0;
+}
+#cronometro { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--txt); }
+#cronometro.urgente { color: var(--b); }
+
+.area-jogo { flex: 1; position: relative; display: grid; grid-template-columns: 1fr 320px; min-height: 0; }
+#tela3d { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+
+.camera-barra { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 6px; align-items: center; }
+.camera-barra button { background: rgba(28,36,48,.85); color: var(--txt); border: 1px solid var(--linha); }
+/* O volume da música mora na barra da câmera, colado no botão dela. Some
+   quando a música está parada: régua sem nada para regular só ocupa espaço. */
+.camera-barra .vol {
+  width: 84px; padding: 0; accent-color: var(--a);
+  background: transparent; border: 0;
+}
+.camera-barra .vol[hidden] { display: none; }
+
+.painel {
+  background: var(--bg2); border-left: 1px solid var(--linha);
+  display: flex; flex-direction: column;
+  /* Com painel de goleiro, cobrança e replay abertos a coluna passa da tela:
+     ela rola em vez de esconder o que ficou embaixo. */
+  overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin; scrollbar-color: var(--linha) transparent;
+}
+.painel::-webkit-scrollbar { width: 10px; }
+.painel::-webkit-scrollbar-track { background: transparent; }
+.painel::-webkit-scrollbar-thumb { background: var(--linha); border-radius: 6px; border: 3px solid var(--bg2); }
+.painel::-webkit-scrollbar-thumb:hover { background: var(--txt2); }
+.bloco { padding: 14px 16px; border-bottom: 1px solid var(--linha); flex: 0 0 auto; }
+/* O chat estica no que sobrar, mas nunca fica menor que isto. */
+.bloco.cresce { flex: 1 0 auto; display: flex; flex-direction: column; min-height: 200px; }
+.bloco h3 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--txt2); }
+#painelJogada { opacity: .58; transition: opacity .2s; }
+#painelJogada.ativo { opacity: 1; }
+#estadoVez { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+/* O #estadoVez também é uma .etiqueta-vez: quando ela vira chip amarelo, o
+ texto tem que ser escuro. O seletor por id ganha do de classe, então era
+ aqui que a letra amarela sobrava por cima do fundo amarelo. */
+#estadoVez.destaque { color: #0b1018; }
+.mini { font-size: 12px; color: var(--txt2); margin: 2px 0; }
+.mini.ok { color: var(--ok); }
+.mini.alerta { color: var(--alerta); }
+.dados { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 10px 0 6px; font-size: 13px; }
+.dados dt { color: var(--txt2); }
+.dados dd { margin: 0; font-family: ui-monospace, monospace; }
+.barra { height: 6px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+#barraForca { height: 100%; width: 0; background: linear-gradient(90deg, var(--ok), var(--destaque), var(--b)); transition: width .08s; }
+.check { display: flex; align-items: center; gap: 7px; font-size: 12px; margin: 10px 0; }
+.check input { width: auto; }
+#btnChutar { width: 100%; }
+.ajuda { font-size: 11px; color: var(--txt2); line-height: 1.6; margin: 12px 0 0; }
+#btnIniciar { width: 100%; margin-top: 10px; }
+#btnSairPartida { width: 100%; margin-top: 6px; }
+
+.time-bloco { margin-bottom: 10px; }
+.time-bloco h4 { margin: 0 0 4px; font-size: 13px; }
+.time-bloco h4 span { color: var(--txt2); font-weight: 400; }
+.time-bloco.time-a h4 { color: var(--a); }
+.time-bloco.time-b h4 { color: var(--b); }
+.jogador { font-size: 12px; font-family: ui-monospace, monospace; color: var(--txt2); padding: 2px 0; }
+.jogador.vez { color: var(--destaque); font-weight: 700; }
+.jogador.vazio { font-style: italic; opacity: .6; }
+.jogador em { font-style: normal; opacity: .7; }
+
+#registro { flex: 1; overflow-y: auto; font-size: 12px; min-height: 0; }
+#registro .linha {
+  display: flex; gap: 7px; align-items: baseline;
+  padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.04); color: var(--txt2);
+}
+/* A hora é referência, não conteúdo: fica fina e não rouba a leitura. */
+#registro .hora {
+  flex: 0 0 auto; font-variant-numeric: tabular-nums;
+  font-size: 10.5px; color: var(--txt3, #6b7a8c); opacity: .75;
+}
+#registro .linha > span:last-child { flex: 1; min-width: 0; }
+/* O lance mais novo em cima ganha um traço, para o olho achar sozinho. */
+#registro .linha:first-child { border-left: 2px solid var(--destaque); padding-left: 6px; }
+#registro .goal { color: var(--destaque); font-weight: 700; }
+#registro .foul { color: var(--alerta); }
+#registro .chat { color: var(--txt); }
+#formChat { margin-top: 8px; }
+
+.comemoracao {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: clamp(48px, 9vw, 120px); font-weight: 900; letter-spacing: .04em;
+  pointer-events: none; opacity: 0; transform: scale(.7); transition: opacity .3s, transform .3s;
+  text-shadow: 0 6px 40px rgba(0,0,0,.85);
+}
+.comemoracao.visivel { opacity: 1; transform: scale(1); }
+.comemoracao.time-a { color: var(--a); }
+.comemoracao.time-b { color: var(--b); }
+
+@media (max-width: 900px) {
+  .lobby { grid-template-columns: 1fr; }
+  .area-jogo { grid-template-columns: 1fr; grid-template-rows: 1fr 300px; }
+  .painel { border-left: 0; border-top: 1px solid var(--linha); }
+}
+
+/* ================= palheta ================= */
+.bloco-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.bloco-topo h3 { margin: 0; }
+.etiqueta-vez {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  padding: 3px 9px; border-radius: 20px; background: var(--bg3); color: var(--txt2);
+}
+.etiqueta-vez.destaque { background: var(--destaque); color: #0b1018; font-weight: 800; }
+
+#painelJogada { transition: opacity .2s; }
+#painelJogada.travado .controle { opacity: .4; pointer-events: none; }
+
+.escolha-botao { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 8px; }
+.eb-rotulo { font-size: 11px; color: var(--txt2); text-transform: uppercase; letter-spacing: .05em; }
+#botaoSelecionado { font-size: 18px; font-family: ui-monospace, monospace; color: var(--destaque); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.chips-vazio { color: var(--txt2); font-size: 12px; }
+.chip {
+  background: var(--bg3); color: var(--txt); border: 1px solid var(--linha);
+  padding: 5px 11px; font-size: 12px; font-family: ui-monospace, monospace; border-radius: 6px;
+}
+.chip.ativo { background: var(--destaque); color: #0b1018; border-color: var(--destaque); font-weight: 800; }
+.dica-escolha { font-size: 11px; color: var(--alerta); margin: 0 0 10px; line-height: 1.4; }
+
+.controle { margin-bottom: 12px; }
+.controle > label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin: 0 0 4px;
+}
+.controle > label em { font-style: normal; font-size: 14px; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; }
+.linha-ctl { display: grid; grid-template-columns: 1fr 68px; gap: 8px; align-items: center; }
+.linha-ctl input[type=number] { padding: 4px 6px; font-size: 12px; text-align: right; }
+.explica { font-size: 10.5px; color: var(--txt2); margin: 4px 0 0; line-height: 1.4; }
+.explica b { color: var(--destaque); font-variant-numeric: tabular-nums; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 5px; padding: 0; border: 0; border-radius: 3px;
+  background: linear-gradient(90deg, var(--a), var(--destaque), var(--b));
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--bg); cursor: grab; box-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+input[type=range]::-moz-range-thumb {
+  width: 15px; height: 15px; border-radius: 50%; background: #fff;
+  border: 2px solid var(--bg); cursor: grab;
+}
+input[type=range]:disabled { opacity: .35; }
+
+.atalhos { display: flex; gap: 6px; margin: 10px 0; }
+.atalhos button { flex: 1; }
+
+.diagnostico { background: var(--bg); border: 1px solid var(--linha); border-radius: 8px; padding: 9px 11px; margin-bottom: 10px; font-size: 12px; }
+.diagnostico:empty { display: none; }
+.dg-aviso { margin: 0 0 7px; font-weight: 600; line-height: 1.35; }
+.dg-aviso.bom { color: var(--ok); }
+.dg-aviso.medio { color: var(--alerta); }
+.dg-aviso.ruim { color: var(--b); }
+.dg-aviso.cavada { color: #8cdcff; }
+.dg-linha { display: flex; justify-content: space-between; gap: 10px; padding: 1px 0; color: var(--txt2); }
+.dg-linha b { color: var(--txt); font-variant-numeric: tabular-nums; }
+.dg-linha.ok b { color: var(--ok); }
+.dg-linha.alerta b { color: var(--alerta); }
+
+/* faixa "quem está com a palheta" */
+.faixa-palheta {
+  position: absolute; top: 18px; left: 50%; transform: translate(-50%, -200%);
+  z-index: 3;
+  display: flex; align-items: center; gap: 9px;
+  background: rgba(12,16,22,.9); border: 1px solid var(--destaque); border-radius: 22px;
+  padding: 7px 16px; font-size: 12px; transition: transform .25s; pointer-events: none; max-width: 92%;
+}
+.faixa-palheta.visivel { transform: translate(-50%, 0); }
+.faixa-palheta.ruim { border-color: var(--b); }
+.fp-rotulo { color: var(--txt2); text-transform: uppercase; font-size: 10px; letter-spacing: .07em; }
+#fpNome { color: var(--destaque); font-size: 14px; }
+.faixa-palheta.ruim #fpNome { color: var(--b); }
+.fp-detalhe { color: var(--txt2); font-family: ui-monospace, monospace; font-size: 11px; }
+
+.dica-mouse { color: var(--txt2); font-size: 11px; align-self: center; margin-left: 6px; }
+
+/* nomes de jogador */
+.jogador { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jg-nome { font-family: system-ui, sans-serif; color: var(--txt); }
+.jogador.vez .jg-nome { color: var(--destaque); font-weight: 700; }
+.jg-modelo {
+  font-size: 10px; text-transform: none; padding: 1px 6px; border-radius: 20px;
+  background: var(--bg3); color: var(--txt2); border: 1px solid var(--linha); font-family: ui-monospace, monospace;
+}
+
+/* ================= replay ================= */
+.replay-controles { display: flex; gap: 5px; align-items: center; margin-bottom: 9px; }
+.replay-controles button { padding: 5px 9px; font-size: 13px; line-height: 1; }
+.pequeno-select {
+  margin-left: auto; background: var(--bg3); color: var(--txt);
+  border: 1px solid var(--linha); border-radius: 6px; padding: 4px 6px; font: inherit; font-size: 12px;
+}
+.rp-descricao { font-size: 12px; margin: 0 0 8px; line-height: 1.45; }
+.rp-sub { color: var(--txt2); font-size: 11px; font-family: ui-monospace, monospace; }
+.rp-scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: 11px; color: var(--txt2); margin-bottom: 10px; }
+.rp-scrub em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--txt); }
+.rp-lista { max-height: 190px; overflow-y: auto; border-top: 1px solid var(--linha); }
+.rp-item {
+  display: grid; grid-template-columns: 26px 18px 32px 1fr auto; gap: 6px; align-items: center;
+  width: 100%; text-align: left; background: transparent; color: var(--txt2);
+  border: 0; border-bottom: 1px solid rgba(255,255,255,.04); border-radius: 0;
+  padding: 5px 4px; font-size: 11px; font-weight: 400;
+}
+.rp-item:hover { background: var(--bg3); }
+.rp-item.atual { background: var(--bg3); color: var(--txt); box-shadow: inset 2px 0 0 var(--destaque); }
+.rp-item.gol { color: var(--destaque); font-weight: 700; }
+.rp-item.falta { color: var(--alerta); }
+.rp-n { font-variant-numeric: tabular-nums; opacity: .6; }
+.rp-bot { font-family: ui-monospace, monospace; }
+.rp-out { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-pl { font-variant-numeric: tabular-nums; opacity: .75; }
+
+/* fases do replay: configuração da palheta -> batida -> lance */
+.rp-fase {
+  border: 1px solid var(--linha); border-radius: 8px;
+  padding: 8px 10px; margin-bottom: 9px; background: var(--bg);
+  font-size: 11.5px; line-height: 1.45;
+}
+.rp-fase.ajuste { border-color: var(--destaque); }
+.rp-fase.ajuste.final { border-color: var(--ok); }
+.rp-fase.ajuste.ruim { border-color: var(--b); }
+.rp-fase.golpe { border-color: #fff; background: #23282f; }
+.rp-fase.lance { border-color: var(--a); }
+.rf-tag {
+  display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  font-weight: 800; color: var(--destaque);
+}
+.rp-fase.ajuste.final .rf-tag { color: var(--ok); }
+.rp-fase.ajuste.ruim .rf-tag { color: var(--b); }
+.rp-fase.golpe .rf-tag { color: #fff; }
+.rp-fase.lance .rf-tag { color: var(--a); }
+.rf-quem { float: right; color: var(--txt2); font-size: 10.5px; }
+.rf-nums { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 5px; color: var(--txt2); }
+.rf-nums b { color: var(--txt); font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
+.rf-aviso { margin-top: 4px; color: var(--txt2); }
+.rp-item { grid-template-columns: 26px 18px 32px 1fr auto auto; }
+.rp-aj { font-size: 10px; opacity: .55; font-variant-numeric: tabular-nums; }
+
+/* declaração de chute e goleiro caixa */
+.aviso-declarado {
+  font-size: 11.5px; color: var(--ok); background: #12301f;
+  border: 1px solid var(--ok); border-radius: 7px;
+  padding: 7px 10px; margin: 0 0 8px; line-height: 1.4;
+}
+#btnDeclarar { width: 100%; margin-bottom: 8px; }
+#painelGoleiro { border-bottom: 2px solid var(--destaque); }
+#painelGoleiro #gkAviso { color: var(--destaque); margin-bottom: 12px; line-height: 1.45; }
+#btnConfirmarGoleiro { width: 100%; margin-top: 4px; }
+#gkArea { margin-bottom: 10px; }
+/* A mesma linha vira o aviso de "aí não cabe" durante o arrasto: o texto muda
+   e a cor avisa antes de a pessoa ler. */
+#gkArea.erro { color: #ffb3ac; font-weight: 600; }
+
+/* comemoração de gol e selo de replay */
+.comemoracao {
+  flex-direction: column; gap: 6px;
+  transition: opacity .35s, transform .35s;
+}
+.gol-texto {
+  font-size: clamp(44px, 8.5vw, 128px); font-weight: 900; letter-spacing: .03em; line-height: 1;
+  animation: pulsaGol .55s ease-out 3;
+}
+.gol-time { font-size: clamp(16px, 2.6vw, 34px); font-weight: 700; color: var(--txt); letter-spacing: .16em; text-transform: uppercase; }
+.gol-placar { font-size: clamp(22px, 3.4vw, 46px); font-weight: 800; color: var(--txt); font-variant-numeric: tabular-nums; }
+@keyframes pulsaGol {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+.selo-replay {
+  position: absolute; top: 18px; left: 18px;
+  display: none; align-items: center; gap: 9px;
+  background: rgba(10,14,20,.86); border: 1px solid var(--b); border-radius: 6px;
+  padding: 7px 14px; font-size: 13px; font-weight: 900; letter-spacing: .22em;
+  color: var(--txt); pointer-events: none; z-index: 6;
+}
+.selo-replay.visivel { display: flex; }
+.selo-replay .ponto {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--b);
+  animation: piscaReplay 1s steps(1, end) infinite;
+}
+@keyframes piscaReplay { 0%, 50% { opacity: 1; } 51%, 100% { opacity: .15; } }
+
+#painelCobranca { border-bottom: 2px solid var(--a); }
+#painelCobranca #cbAviso { color: var(--a); margin-bottom: 12px; line-height: 1.45; }
+#btnConfirmarCobranca { width: 100%; margin-top: 4px; }
+#cbInfo { margin: 6px 0 10px; }
+
+/* grupos do formulário de nova partida */
+.grupo {
+  border: 1px solid var(--linha); border-radius: 9px;
+  padding: 10px 12px 4px; margin: 0 0 12px;
+}
+.grupo legend {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--txt2); padding: 0 6px;
+}
+.grupo .check { margin: 0 0 8px; align-items: flex-start; line-height: 1.4; }
+.sub-campo {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  font-size: 12px; color: var(--txt2); margin-bottom: 8px;
+}
+.sub-campo input { width: 82px; margin: 0; }
+.sub-campo input:disabled { opacity: .4; }
+.regras-resumo {
+  font-size: 11.5px; color: var(--txt2); line-height: 1.65; margin: 0 0 10px;
+}
+.regras-resumo b { color: var(--txt); }
+.check input[type=number] { width: 58px; margin: 0 2px; }
+
+.cp-acoes button.cheio { opacity: .45; text-decoration: line-through; }
+
+/* identidade da partida no topo */
+.hud-esq { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.identidade { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+#tituloPartida {
+  font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: var(--txt);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34vw;
+}
+.papel {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
+  color: var(--txt2);
+}
+.papel.time-a { color: var(--a); }
+.papel.time-b { color: var(--b); }
+.papel.assistindo { color: var(--txt2); }
+
+/* atalhos de teclado */
+.ajuda.atalhos { margin-top: 10px; }
+kbd {
+  display: inline-block; min-width: 17px; text-align: center;
+  padding: 1px 5px; margin: 0 1px;
+  font: 600 10px/1.5 ui-monospace, monospace;
+  color: var(--txt); background: var(--bg3);
+  border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4px;
+}
+
+.chip kbd { margin-right: 5px; opacity: .75; font-size: 10px; padding: 0 3px; }
+
+.chip.posto { border-color: var(--destaque); }
+.chip[disabled] { opacity: .35; cursor: not-allowed; }
+
+.convite { margin-top: 10px; padding: 10px; border: 1px solid var(--linha); border-radius: 8px; background: rgba(255,210,74,.05); }
+.convite h4 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--destaque); }
+.convite label { display: block; margin: 8px 0 4px; }
+.convite-texto {
+  width: 100%; box-sizing: border-box; font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px; line-height: 1.45; color: var(--txt); background: var(--bg);
+  border: 1px solid var(--linha); border-radius: 6px; padding: 7px; resize: vertical;
+}
+.convite button { margin-top: 6px; }
+
+.espera-llm { display: flex; flex-direction: column; gap: 6px; }
+.convite + .convite { margin-top: 8px; }
+.convite .cv-time { font-weight: 700; }
+
+button.perigo { border-color: rgba(230,72,60,.5); color: #ff9b91; }
+button.perigo:hover { background: rgba(230,72,60,.14); }
+
+/* Faixa de aviso de segurança: fica acima de tudo, some quando o usuário fecha. */
+.aviso-seguranca {
+  position: relative; z-index: 60;
+  background: #4a3410; border-bottom: 1px solid #7a5a1e; color: #ffe6b0;
+  padding: 8px 14px; font-size: 12.5px; line-height: 1.5;
+}
+.aviso-seguranca .as-item { display: flex; gap: 8px; align-items: baseline; }
+.aviso-seguranca .as-item + .as-item { margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,.08); }
+.aviso-seguranca b { color: #ffd24a; }
+.aviso-seguranca .as-fechar {
+  position: absolute; top: 6px; right: 8px;
+  background: none; border: 0; color: #ffe6b0; font-size: 16px;
+  cursor: pointer; padding: 2px 6px; line-height: 1;
+}
+.aviso-seguranca .as-fechar:hover { color: #fff; background: rgba(255,255,255,.1); border-radius: 4px; }
+
+/* Aba de depuração dos tópicos do broker. */
+.topicos summary { cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--txt2); }
+.topicos summary::marker { color: var(--txt2); }
+.tp-conta { font-variant-numeric: tabular-nums; color: var(--destaque); margin-left: 6px; }
+.tp-controles { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0 6px; font-size: 11px; }
+.tp-controles .check { margin: 0; }
+.tp-lista { max-height: 240px; overflow-y: auto; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; }
+.tp-item { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; }
+.tp-item:hover { background: rgba(255,255,255,.04); }
+.tp-hora { color: var(--txt3, #6b7a8c); opacity: .7; }
+.tp-nome { color: var(--destaque); }
+.tp-resumo { color: var(--txt2); }
+.tp-cru { margin: 4px 0 6px; padding: 6px; background: var(--bg); border-radius: 5px; color: var(--txt2); white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
